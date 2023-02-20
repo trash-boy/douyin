@@ -19,7 +19,11 @@ func CreateAndUpdate(userId,videoId uint, status int)error{
 	}
 	return  UpdateStatus(userId,videoId,status)
 }
-
+func GetVideoIdByUserId(userId uint)([]UserVideoFavorite, error){
+	var userVideo []UserVideoFavorite
+	result := config.DB.Select("video_id").Where("user_id = ? and status = ?",userId, 1).Find(&userVideo)
+	return userVideo,result.Error
+}
 func IsExist(userId,videoId uint)(exist bool){
 	var uservideo UserVideoFavorite
 	uservideo.UserId = userId

@@ -1,24 +1,27 @@
 package uservideo
 
 import (
-
-	"gopkg.in/go-playground/validator.v8"
-	"reflect"
+	"github.com/go-playground/validator/v10"
 )
 
 
 type UserFavoriteRequest struct {
-	Token string `form:"token"  json:"token"`
-	VideoId string `form:"video_id"  json:"video_id"`
-	ActionType string `form:"action_type"  json:"action_type"  validate:"required,gte=1,lte=2"`
+	Token string `form:"token" `
+	VideoId string `form:"video_id"  `
+	ActionType string `form:"action_type"   validate:"required,ValidateActionType"`
 }
 
-func ValidateActionType(v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value, field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string) bool {
 
-	if value, ok := field.Interface().(string); ok {
-		return value == "1" || value == "2"
-	}
-
-	return false
+type UserGetFavoriteListRequest struct {
+	UserId string `form:"user_id" binding:"required"`
+	Token string `form:"token" binding:"required"`
 }
+
+func ValidateActionType(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	return value == "1" || value == "2"
+
+}
+
 

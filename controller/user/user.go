@@ -2,6 +2,7 @@ package user
 
 import (
 	"TinyTolk/config"
+	"TinyTolk/middleware"
 	user3 "TinyTolk/model/user"
 	"TinyTolk/model/userfollow"
 	"TinyTolk/request/user"
@@ -18,6 +19,11 @@ import (
 func UserRegisterHandler(c *gin.Context){
 	var userRegister user.UserRegisterRequest
 	if err := c.Bind(&userRegister); err != nil {
+		data := *utils.FormUserRegisterResponse(Code.UserRegisterError, Code.GetMsg(Code.UserRegisterError), 0, config.INVALID_TOKEN)
+		c.JSON(http.StatusOK, data)
+		return
+	}
+	if valid := middleware.Validate.Struct(userRegister);valid != nil{
 		data := *utils.FormUserRegisterResponse(Code.UserRegisterError, Code.GetMsg(Code.UserRegisterError), 0, config.INVALID_TOKEN)
 		c.JSON(http.StatusOK, data)
 		return
@@ -40,6 +46,20 @@ func UserRegisterHandler(c *gin.Context){
 		c.JSON(http.StatusOK,data)
 		return
 	}
+	//填写详细信息表
+	go func() {
+		var userInfo user3.UserInfo
+		userInfo.Avatar = config.AVATAR_URL
+		userInfo.BackgroudImage = config.BACKGROUD_IMAGE
+		userInfo.UserId = user.ID
+		err := user3.InsertUserInfo(&userInfo)
+		if err != nil{
+			log.Println(err)
+		}
+
+	}()
+
+
 	data := *utils.FormUserRegisterResponse(Code.Success, Code.GetMsg(Code.Success),user.ID,token)
 	c.JSON(http.StatusOK,data)
 	return
@@ -93,7 +113,7 @@ func GetUserHandler(c *gin.Context){
 		c.JSON(http.StatusOK, data)
 		return
 	}
-	log.Println("userrequest," , userRequest)
+
 	//验证tokenid是否有效
 	tokenIsValid := JWT.VerifyToken(c, userRequest.Token)
 	if tokenIsValid == false{
@@ -109,8 +129,7 @@ func GetUserHandler(c *gin.Context){
 
 	//根据id查询响应的数据
 	//首先根据id去用户信息表中查询对应数据，其次去关注表中查询是否有当前关注的字段
-	log.Println("tempUser,",tempUser)
-	log.Println("userRequest", userRequest)
+
 	exist = user3.GetUserById(&tempUser, utils.StringToUint(userRequest.UserId))
 	if exist != true{
 		data := *utils.FormUserResponse(Code.UserIdNotExist,Code.GetMsg(Code.UserIdNotExist), tempUser )
@@ -119,6 +138,17 @@ func GetUserHandler(c *gin.Context){
 	}
 
 	tempUser.IsFollow,_=  userfollow.UserIsFollow(id.(uint),utils.StringToUint(userRequest.UserId))
+
+	//1.搜索详细的信息
+	var userInfo user3.UserInfo
+	exist = user3.GetUserInfoByUserId(&userInfo,  utils.StringToUint(userRequest.UserId))
+	if exist != true{
+		data := *utils.FormUserResponse(Code.UserIdNotExist,Code.GetMsg(Code.UserIdNotExist), tempUser )
+		c.JSON(http.StatusOK, data)
+		return
+	}
+	//将userInfo 数据全部映射到tempUser中
+	_ = utils.UserInfoToUser(&tempUser, &userInfo)
 	data := *utils.FormUserResponse(Code.Success,Code.GetMsg(Code.Success), tempUser )
 	c.JSON(http.StatusOK, data)
 	return

@@ -27,6 +27,13 @@ const (
 
 	UserVideoFavoriteParamsError = 300001
 	UserVideoFavoriteDatabaseError = 300002
+
+	UserGetFavoriteListParamsError = 400001
+	UserGetFavoriteListDatatbaseError = 400002
+
+	CommentParamsError = 500001
+	CommentDatabaseError = 500002
+	CommentGetListParamsError = 500003
 )
 
 var Msg = map[int]string{
@@ -55,6 +62,12 @@ var Msg = map[int]string{
 	VideoFeedGetDataError:"视频流数据库获取数据错误",
 	UserVideoFavoriteParamsError:"用户视频点赞参数错误",
 	UserVideoFavoriteDatabaseError:"用户视频点赞数据库错误",
+
+	UserGetFavoriteListParamsError:"用户获取点赞视频列表参数错误",
+	UserGetFavoriteListDatatbaseError:"用户获取点赞视频列表数据库错误",
+	CommentParamsError:"评论参数错误",
+	CommentDatabaseError:"评论数据库错误",
+	CommentGetListParamsError:"获取评论列表参数错误",
 
 
 }

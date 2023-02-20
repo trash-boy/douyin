@@ -51,6 +51,33 @@ func GetVideoListByTimeStamp(timeStamp uint, videoList *[]video.Video)error{
 	return result.Error
 }
 
+func GetVideoByVideoId(VideoId uint, videoList *video.Video)error{
+	result := config.DB.Model(&Video{}).Where("id = ?",VideoId).Find(videoList)
+	return result.Error
+}
 
+func GetUserIdByVideoId(videoID uint)(uint){
+	var v Video
+	_ = config.DB.Model(&Video{}).Select("user_id").Where("id = ?",videoID).Find(&v)
+	return v.UserId
+}
+
+func AddFavoriteCount(Id uint) error {
+	result := config.DB.Model(&Video{}).Where(" id = ?", Id).UpdateColumn("favorite_count",gorm.Expr("favorite_count + ?", 1))
+	return result.Error
+}
+func SubFavoriteCount(Id uint) error {
+	result := config.DB.Model(&Video{}).Where(" id = ?", Id).UpdateColumn("favorite_count",gorm.Expr("favorite_count - ?", 1))
+	return result.Error
+}
+
+func AddCommentCount(Id uint) error {
+	result := config.DB.Model(&Video{}).Where(" id = ?", Id).UpdateColumn("comment_count",gorm.Expr("favorite_count + ?", 1))
+	return result.Error
+}
+func SubCommentCount(Id uint) error {
+	result := config.DB.Model(&Video{}).Where(" id = ?", Id).UpdateColumn("comment_count",gorm.Expr("favorite_count - ?", 1))
+	return result.Error
+}
 
 

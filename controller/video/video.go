@@ -85,13 +85,18 @@ func VideoActionHandler(c *gin.Context){
 
 	noTypeName := strings.Split(fileName,".")[0]
 	coverName := utils.GetSnapshot(fileUrl, VideoDir + "\\" + noTypeName,1)
-	log.Println("缩略图的name", coverName)
+
 	err = Video.InsertVideo(userId.(uint), fileUrl, VideoDir + "\\" + coverName, videoActionRequest.Title)
 	if err != nil{
 		data := *utils.FormVideoActionResponse(Code.VideoWriteDatabaseError,Code.GetMsg(Code.VideoWriteDatabaseError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
+	//工作数+1
+	go func() {
+		user.AddWorkCount(userId.(uint))
+	}()
+
 	data := *utils.FormVideoActionResponse(Code.Success,Code.GetMsg(Code.Success))
 	c.JSON(http.StatusOK, data)
 	return

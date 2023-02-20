@@ -1,19 +1,17 @@
 package user
 
 import (
-	//"github.com/go-playground/validator/v10"
-	"gopkg.in/go-playground/validator.v8"
-	"reflect"
+	"github.com/go-playground/validator/v10"
 )
 
 type UserRegisterRequest struct {
-	Username string  `form:"username" json:"username" validate:"ValidateUsername"`
-	Password string ` form:"password" json:"password" validate:"ValidatePassword"`
+	Username string  `form:"username"  validate:"required,ValidateUsername"`
+	Password string ` form:"password" validate:"required,ValidatePassword"`
 }
 
 type UserLoginRequest struct {
-	Username string `form:"username" json:"username" validate:"required, ValidateUsername"`
-	Password string `form:"password" json:"password"  validate:"required, ValidateUsername"`
+	Username string `form:"username"  validate:"required,ValidateUsername"`
+	Password string `form:"password"  validate:"required,ValidatePassword"`
 }
 
 type UserReuqest struct {
@@ -22,23 +20,18 @@ type UserReuqest struct {
 }
 
 
+//todo validate 失效
 
-func ValidateUsername(v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value, field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string) bool {
+func ValidateUsername(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	return value != "" && len(value) <= 32
 
-	if value, ok := field.Interface().(string); ok {
-		// 字段不能为空，并且不等于  admin
-		return value != "" && len(value) <= 32
-	}
-
-	return false
 }
 
-func ValidatePassword(v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value, field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string) bool {
 
-	if value, ok := field.Interface().(string); ok {
-		// 字段不能为空，并且不等于  admin
-		return value != "" && len(value) <= 32
-	}
+func ValidatePassword(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	return value != "" && len(value) <= 32
 
-	return false
 }
+

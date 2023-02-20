@@ -1,6 +1,9 @@
 package utils
 
-import user2 "TinyTolk/response/user"
+import (
+	"TinyTolk/model/user"
+	user2 "TinyTolk/response/user"
+)
 
 const (
 	UserPrefix = "douyin_"
@@ -32,5 +35,17 @@ func FormUserResponse(statusCode int32, statusMsg string, user user2.User)*user2
 	return &response
 }
 
+
+func UserInfoToUser(user *user2.User, userInfo *user.UserInfo)error{
+	user.BackgroudImage = userInfo.BackgroudImage
+	user.Avatar = userInfo.Avatar
+	user.FavoriteCount = userInfo.FavoriteCount
+	user.TotalFavorited = userInfo.TotalFavorited
+	user.Signature = userInfo.Signature
+	user.WorkCount = userInfo.WorkCount
+
+	return nil
+
+}
 
 
