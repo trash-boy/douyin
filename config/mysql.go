@@ -9,9 +9,9 @@ import (
 var DB *gorm.DB
 func init() {
 	username := "root"  //账号
-	password := "admin@123456" //密码
-	host := "121.4.219.39" //数据库地址，可以是Ip或者域名
-	port := 33061 //数据库端口
+	password := "123456" //密码
+	host := "10.122.55.233" //数据库地址，可以是Ip或者域名
+	port := 3306 //数据库端口
 	Dbname := "douyin" //数据库名
 	timeout := "10s" //连接超时，10秒
 

@@ -17,50 +17,32 @@ import (
 	"net/http"
 )
 func UserRegisterHandler(c *gin.Context){
-	var userRegister user.UserRegisterRequest
-	if err := c.Bind(&userRegister); err != nil {
-		data := *utils.FormUserRegisterResponse(Code.UserRegisterError, Code.GetMsg(Code.UserRegisterError), 0, config.INVALID_TOKEN)
+
+	var request user.UserRegisterRequest
+	if err := c.Bind(&request); err != nil {
+		data := *utils.FormUserRegisterResponse(utils.IntToInt32(Code.UserRegisterError), Code.GetMsg(Code.UserRegisterError), utils.IntToInt64(config.INVALID_USER_ID), config.INVALID_TOKEN)
 		c.JSON(http.StatusOK, data)
 		return
 	}
-	if valid := middleware.Validate.Struct(userRegister);valid != nil{
-		data := *utils.FormUserRegisterResponse(Code.UserRegisterError, Code.GetMsg(Code.UserRegisterError), 0, config.INVALID_TOKEN)
+	if valid := middleware.Validate.Struct(request);valid != nil{
+		data := *utils.FormUserRegisterResponse(utils.IntToInt32(Code.UserRegisterError), Code.GetMsg(Code.UserRegisterError), utils.IntToInt64(config.INVALID_USER_ID), config.INVALID_TOKEN)
 		c.JSON(http.StatusOK, data)
 		return
 	}
-	//处理数据验证成功逻辑
-	//生成数据存入数据库
-	var user user3.User
-	user.Username = userRegister.Username
-	user.Password = encryption.Encoding( userRegister.Password)
-	user.Name = utils.UserPrefix + userRegister.Username
-	result := user3.InsertUser(&user)
-	if result.Error != nil{
-		data := *utils.FormUserRegisterResponse(Code.UserRegisterError, Code.GetMsg(Code.UserRegisterError),config.INVALID_USER_ID,"")
-		c.JSON(http.StatusOK,data)
-		return
-	}
-	token,err := JWT.SetToken(user.ID)
+
+	userId,err := user3.InsertUser(request.Username, request.Password)
 	if err != nil{
-		data := *utils.FormUserRegisterResponse(Code.TokenProduceError, Code.GetMsg(Code.TokenProduceError),config.INVALID_USER_ID,"")
+		data := *utils.FormUserRegisterResponse(utils.IntToInt32(Code.UserRegisterError), Code.GetMsg(Code.UserRegisterError),utils.IntToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
 		c.JSON(http.StatusOK,data)
 		return
 	}
-	//填写详细信息表
-	go func() {
-		var userInfo user3.UserInfo
-		userInfo.Avatar = config.AVATAR_URL
-		userInfo.BackgroudImage = config.BACKGROUD_IMAGE
-		userInfo.UserId = user.ID
-		err := user3.InsertUserInfo(&userInfo)
-		if err != nil{
-			log.Println(err)
-		}
-
-	}()
-
-
-	data := *utils.FormUserRegisterResponse(Code.Success, Code.GetMsg(Code.Success),user.ID,token)
+	token,err := JWT.SetToken(userId)
+	if err != nil{
+		data := *utils.FormUserRegisterResponse(utils.IntToInt32(Code.TokenProduceError), Code.GetMsg(Code.TokenProduceError),utils.IntToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
+		c.JSON(http.StatusOK,data)
+		return
+	}
+	data := *utils.FormUserRegisterResponse(utils.IntToInt32(Code.Success), Code.GetMsg(Code.Success),utils.UintToInt64(userId),token)
 	c.JSON(http.StatusOK,data)
 	return
 
@@ -68,9 +50,9 @@ func UserRegisterHandler(c *gin.Context){
 
 
 func UserLoginHandler(c *gin.Context){
-	var userLogin user.UserLoginRequest
-	if err := c.Bind(&userLogin); err != nil{
-		data := *utils.FormUserLoginResponse(Code.UserLoginError, Code.GetMsg(Code.UserLoginError),config.INVALID_USER_ID,"")
+	var request user.UserLoginRequest
+	if err := c.Bind(&request); err != nil{
+		data := *utils.FormUserLoginResponse(utils.IntToInt32(Code.UserLoginError), Code.GetMsg(Code.UserLoginError),utils.IntToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
 		c.JSON(http.StatusOK,data)
 		return
 	}
@@ -78,78 +60,84 @@ func UserLoginHandler(c *gin.Context){
 	//处理数据验证成功逻辑
 	//从数据库里根据username获取密码进行对比
 	var user user3.User
-	exist := user3.GetUserByUsername(&user, userLogin.Username)
+	exist := user3.GetUserByUsername(&user, request.Username)
 	if exist != true{
-		data := *utils.FormUserLoginResponse(Code.UserNameNotExist, Code.GetMsg(Code.UserNameNotExist),user.ID,config.INVALID_TOKEN)
+		data := *utils.FormUserLoginResponse(utils.IntToInt32(Code.UserNameNotExist), Code.GetMsg(Code.UserNameNotExist),utils.UintToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
 		c.JSON(http.StatusOK,data)
 		return
 	}
-	if encryption.Encoding(userLogin.Password) != user.Password{
-		data := *utils.FormUserLoginResponse(Code.PasswordError, Code.GetMsg(Code.PasswordError),user.ID,config.INVALID_TOKEN)
+	if encryption.Encoding(request.Password) != user.Password{
+		data := *utils.FormUserLoginResponse(utils.IntToInt32(Code.PasswordError), Code.GetMsg(Code.PasswordError),utils.UintToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
 		c.JSON(http.StatusOK,data)
 		return
 	}
 
 	token,err := JWT.SetToken(user.ID)
 	if err != nil{
-		data := *utils.FormUserRegisterResponse(Code.TokenProduceError, Code.GetMsg(Code.TokenProduceError),config.INVALID_USER_ID,config.INVALID_TOKEN)
+		data := *utils.FormUserRegisterResponse(Code.TokenProduceError, Code.GetMsg(Code.TokenProduceError),utils.UintToInt64(config.INVALID_USER_ID),config.INVALID_TOKEN)
 		c.JSON(http.StatusOK,data)
 		return
 	}
-	data := *utils.FormUserRegisterResponse(Code.Success, Code.GetMsg(Code.Success),user.ID,token)
+	data := *utils.FormUserRegisterResponse(Code.Success, Code.GetMsg(Code.Success),utils.UintToInt64(user.ID),token)
 	c.JSON(http.StatusOK,data)
 	return
 }
 
 func GetUserHandler(c *gin.Context){
 
-	var userRequest  user.UserReuqest
+	var request  user.UserReuqest
 	var tempUser user2.User
 
 	//绑定数据
-	if err := c.ShouldBindQuery(&userRequest); err != nil {
-		log.Println("err,",err.Error())
-		data := *utils.FormUserResponse(Code.UserParamsError,Code.GetMsg(Code.UserParamsError), tempUser )
+	if err := c.ShouldBindQuery(&request); err != nil {
+
+		data := *utils.FormUserResponse(utils.IntToInt32(Code.UserParamsError),Code.GetMsg(Code.UserParamsError), &tempUser )
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	//验证tokenid是否有效
-	tokenIsValid := JWT.VerifyToken(c, userRequest.Token)
+	tokenIsValid := JWT.VerifyToken(c, request.Token)
 	if tokenIsValid == false{
-		data := *utils.FormUserResponse(Code.TokenInvalid,Code.GetMsg(Code.TokenInvalid), tempUser )
+		data := *utils.FormUserResponse(utils.IntToInt32(Code.TokenInvalid),Code.GetMsg(Code.TokenInvalid), &tempUser )
 		c.JSON(http.StatusOK, data)
 		return
 	}
+
 	id,exist := c.Get("id")
 	log.Println("id:",id)
 	if exist != true{
 		id = "0"
 	}
+	if id.(uint) != utils.Int64ToUInt(utils.StringToInt64(request.UserId)){
+		data := *utils.FormUserResponse(utils.IntToInt32(Code.TokenInvalid),Code.GetMsg(Code.TokenInvalid), &tempUser )
+		c.JSON(http.StatusOK, data)
+		return
+	}
 
 	//根据id查询响应的数据
 	//首先根据id去用户信息表中查询对应数据，其次去关注表中查询是否有当前关注的字段
 
-	exist = user3.GetUserById(&tempUser, utils.StringToUint(userRequest.UserId))
-	if exist != true{
-		data := *utils.FormUserResponse(Code.UserIdNotExist,Code.GetMsg(Code.UserIdNotExist), tempUser )
+	err := user3.GetUserById(&tempUser, utils.Int64ToUInt(utils.StringToInt64(request.UserId)))
+	if err != nil{
+		data := *utils.FormUserResponse(utils.IntToInt32(Code.UserIdNotExist),Code.GetMsg(Code.UserIdNotExist), &tempUser )
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	tempUser.IsFollow,_=  userfollow.UserIsFollow(id.(uint),utils.StringToUint(userRequest.UserId))
+	tempUser.IsFollow,_=  userfollow.UserIsFollow(id.(uint),utils.Int64ToUInt(utils.StringToInt64(request.UserId)))
 
 	//1.搜索详细的信息
-	var userInfo user3.UserInfo
-	exist = user3.GetUserInfoByUserId(&userInfo,  utils.StringToUint(userRequest.UserId))
-	if exist != true{
-		data := *utils.FormUserResponse(Code.UserIdNotExist,Code.GetMsg(Code.UserIdNotExist), tempUser )
-		c.JSON(http.StatusOK, data)
-		return
-	}
-	//将userInfo 数据全部映射到tempUser中
-	_ = utils.UserInfoToUser(&tempUser, &userInfo)
-	data := *utils.FormUserResponse(Code.Success,Code.GetMsg(Code.Success), tempUser )
+	//var userInfo user3.UserInfo
+	//exist = user3.GetUserInfoByUserId(&userInfo,  utils.StringToUint(userRequest.UserId))
+	//if exist != true{
+	//	data := *utils.FormUserResponse(Code.UserIdNotExist,Code.GetMsg(Code.UserIdNotExist), tempUser )
+	//	c.JSON(http.StatusOK, data)
+	//	return
+	//}
+	////将userInfo 数据全部映射到tempUser中
+	//_ = utils.UserInfoToUser(&tempUser, &userInfo)
+	data := *utils.FormUserResponse(utils.IntToInt32(Code.Success),Code.GetMsg(Code.Success), &tempUser )
 	c.JSON(http.StatusOK, data)
 	return
 

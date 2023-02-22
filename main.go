@@ -2,12 +2,8 @@ package main
 
 import (
 	"TinyTolk/config"
-	comment2 "TinyTolk/controller/comment"
 	user2 "TinyTolk/controller/user"
-	uservideo2 "TinyTolk/controller/uservideo"
-	"TinyTolk/controller/video"
 	"TinyTolk/middleware"
-	user3 "TinyTolk/model/user"
 	"TinyTolk/request/comment"
 	"TinyTolk/request/user"
 	"TinyTolk/request/uservideo"
@@ -22,7 +18,7 @@ func main()  {
 	if config.DB == nil{
 		log.Panic("用户数据库连接错误")
 	}
-	user3.CreateUserInfoTable()
+
 
 	r := gin.Default()
 	middleware.Validate = validator.New()
@@ -36,13 +32,17 @@ func main()  {
 	r.POST("/douyin/user/register", user2.UserRegisterHandler)
 	r.POST("/douyin/user/login", user2.UserLoginHandler)
 	r.GET("/douyin/user/",user2.GetUserHandler)
-	r.POST("/douyin/publish/action",video.VideoActionHandler)
-	r.GET("/douyin/publish/list/",video.VideoListHandler)
-	r.GET("/douyin/feed/",video.VideoFeedHandler)
-	r.POST("/douyin/favorite/action/", uservideo2.UserVideoFavoriteHandler)
-	r.GET("/douyin/favorite/list/", uservideo2.UserGetFavoriteListHandler)
-	r.POST("/douyin/comment/action/", comment2.CommentActionHandler)
-	r.GET("/douyin/comment/list/", comment2.CommentGetListHandler)
+	//r.POST("/douyin/publish/action",video.VideoActionHandler)
+	//r.GET("/douyin/publish/list/",video.VideoListHandler)
+	//r.GET("/douyin/feed/",video.VideoFeedHandler)
+	//r.POST("/douyin/favorite/action/", uservideo2.UserVideoFavoriteHandler)
+	//r.GET("/douyin/favorite/list/", uservideo2.UserGetFavoriteListHandler)
+	//r.POST("/douyin/comment/action/", comment2.CommentActionHandler)
+	//r.GET("/douyin/comment/list/", comment2.CommentGetListHandler)
+	//r.POST("/douyin/relation/action/", soical.RelationActionHandler)
+	//r.GET("/douyin/relation/follow/list/", soical.RelationFollowListHandler)
+	//r.GET("/douyin/relation/follower/list/", soical.RelationFollowerListHandler)
+
 	r.Run(":8080")
 }
 

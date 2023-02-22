@@ -13,6 +13,4 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/u2takey/ffmpeg-go v0.4.1
 	golang.org/x/image v0.4.0 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v8 v8.18.2
 )

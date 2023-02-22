@@ -34,6 +34,13 @@ const (
 	CommentParamsError = 500001
 	CommentDatabaseError = 500002
 	CommentGetListParamsError = 500003
+
+	RelationActionParamsError = 600001
+	RelationActionDatabaseError = 600002
+	RelationFollowListParamsError = 600003
+	RelationFollowListDatabaseError = 600004
+	RelationFollowerListParamsError = 600005
+	RelationFollowerListDatabaseError = 600006
 )
 
 var Msg = map[int]string{
@@ -68,6 +75,13 @@ var Msg = map[int]string{
 	CommentParamsError:"评论参数错误",
 	CommentDatabaseError:"评论数据库错误",
 	CommentGetListParamsError:"获取评论列表参数错误",
+
+	RelationActionParamsError:"用户关注参数错误",
+	RelationActionDatabaseError:"用户关注数据库错误",
+	RelationFollowListParamsError:"用户关注列表参数错误",
+	RelationFollowListDatabaseError:"用户关注列表数据库错误",
+	RelationFollowerListParamsError:"用户粉丝列表参数错误",
+	RelationFollowerListDatabaseError:"用户粉丝列表数据库错误",
 
 
 }
