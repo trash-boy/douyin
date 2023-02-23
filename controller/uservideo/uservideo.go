@@ -12,55 +12,49 @@ import (
 	"TinyTolk/utils/JWT"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sync"
 )
 
 func UserVideoFavoriteHandler(c *gin.Context){
-	var request uservideo.UserFavoriteRequest
-	if err:= c.ShouldBind(&request);err != nil{
-		data := *utils.FormUserVideoFavoriteResponse(utils.IntToInt32(Code.UserVideoFavoriteParamsError), Code.GetMsg(Code.UserVideoFavoriteParamsError))
+	var userVideoRequest uservideo.UserFavoriteRequest
+	if err:= c.ShouldBind(&userVideoRequest);err != nil{
+		data := *utils.FormUserVideoFavoriteResponse(Code.UserVideoFavoriteParamsError, Code.GetMsg(Code.UserVideoFavoriteParamsError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	if valid := middleware.Validate.Struct(request);valid != nil{
-		data := *utils.FormUserVideoFavoriteResponse(utils.IntToInt32(Code.UserVideoFavoriteParamsError), Code.GetMsg(Code.UserVideoFavoriteParamsError))
+	if valid := middleware.Validate.Struct(userVideoRequest);valid != nil{
+		data := *utils.FormUserVideoFavoriteResponse(Code.UserVideoFavoriteParamsError, Code.GetMsg(Code.UserVideoFavoriteParamsError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	//1.校验token
 	//2.查询数据库是否有（user_id,video_id）没有就创建，有就直接改状态
-	if JWT.VerifyToken(c, request.Token) != true{
-		data := *utils.FormUserVideoFavoriteResponse(utils.IntToInt32(Code.TokenInvalid), Code.GetMsg(Code.TokenInvalid))
+	if JWT.VerifyToken(c, userVideoRequest.Token) != true{
+		data := *utils.FormUserVideoFavoriteResponse(Code.TokenInvalid, Code.GetMsg(Code.TokenInvalid))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	id,_ := c.Get("id")
-	if uservideoFavorite.CreateAndUpdate(id.(uint), utils.Int64ToUInt(utils.StringToInt64(request.VideoId)),utils.StringToInt(request.ActionType)) != nil{
-		data := *utils.FormUserVideoFavoriteResponse(utils.IntToInt32(Code.UserVideoFavoriteDatabaseError), Code.GetMsg(Code.UserVideoFavoriteDatabaseError))
+	if uservideoFavorite.CreateAndUpdate(uint(id.(uint)), utils.StringToUint(userVideoRequest.VideoId),utils.StringToInt(userVideoRequest.ActionType)) != nil{
+		data := *utils.FormUserVideoFavoriteResponse(Code.UserVideoFavoriteDatabaseError, Code.GetMsg(Code.UserVideoFavoriteDatabaseError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	//操作数据表
 	go func() {
-		if request.ActionType == "1"{
+		if userVideoRequest.ActionType == "1"{
 			//点赞的数量加+1，获赞人数量+1
-			//利用redis优化
-			_ = user.AddFavoriteCount(id.(uint))
-			_ = user.AddGetFavoriteCount(Video.GetUserIdByVideoId(utils.Int64ToUInt(utils.StringToInt64(request.VideoId))))
-			_ = Video.AddFavoriteCount(utils.Int64ToUInt(utils.StringToInt64(request.VideoId)))
-
+			user.AddFavoriteCount(id.(uint))
+			Video.AddFavoriteCount(utils.StringToUint(userVideoRequest.VideoId))
+			user.AddGetFavoriteCount(Video.GetUserIdByVideoId(utils.StringToUint(userVideoRequest.VideoId)))
 		}else{
-			//利用redis优化
-			_ = user.SubFavoriteCount(id.(uint))
-			_ = user.SubGetFavoriteCount(Video.GetUserIdByVideoId(utils.Int64ToUInt(utils.StringToInt64(request.VideoId))))
-			_ = Video.SubFavoriteCount(utils.Int64ToUInt(utils.StringToInt64(request.VideoId)))
-
-
+			user.SubFavoriteCount(id.(uint))
+			Video.SubFavoriteCount(utils.StringToUint(userVideoRequest.VideoId))
+			user.SubGetFavoriteCount(Video.GetUserIdByVideoId(utils.StringToUint(userVideoRequest.VideoId)))
 		}
 	}()
-	data := *utils.FormUserVideoFavoriteResponse(utils.IntToInt32(Code.Success), Code.GetMsg(Code.Success))
+	data := *utils.FormUserVideoFavoriteResponse(Code.Success, Code.GetMsg(Code.Success))
 	c.JSON(http.StatusOK, data)
 	return
 
@@ -70,60 +64,46 @@ func UserVideoFavoriteHandler(c *gin.Context){
 }
 
 func UserGetFavoriteListHandler(c *gin.Context){
-	var request uservideo.UserGetFavoriteListRequest
-	if err := c.ShouldBind(&request);err != nil{
-		data := *utils.FormUserGetFavoriteResponse(utils.IntToInt32(Code.UserGetFavoriteListParamsError),Code.GetMsg(Code.UserGetFavoriteListParamsError), &[]video.Video{})
+	var userGetFavorite uservideo.UserGetFavoriteListRequest
+	if err := c.ShouldBind(&userGetFavorite);err != nil{
+		data := *utils.FormUserGetFavoriteResponse(Code.UserGetFavoriteListParamsError,Code.GetMsg(Code.UserGetFavoriteListParamsError), []video.Video{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	//1.校验token
-	if JWT.VerifyToken(c, request.Token) != true{
-		data := *utils.FormUserGetFavoriteResponse(utils.IntToInt32(Code.TokenInvalid),Code.GetMsg(Code.TokenInvalid), &[]video.Video{})
-		c.JSON(http.StatusOK, data)
-		return
-	}
-
-	userId,_ := c.Get("id")
-	if userId.(uint) != utils.Int64ToUInt(utils.StringToInt64(request.UserId)){
-		data := *utils.FormUserGetFavoriteResponse(utils.IntToInt32(Code.TokenInvalid),Code.GetMsg(Code.TokenInvalid), &[]video.Video{})
+	if JWT.VerifyToken(c, userGetFavorite.Token) != true{
+		data := *utils.FormUserGetFavoriteResponse(Code.TokenInvalid,Code.GetMsg(Code.TokenInvalid), []video.Video{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	//2.根据user_id去评论表中得到所有的视频id
-	result,err := uservideoFavorite.GetVideoIdByUserId(userId.(uint))
+	result,err := uservideoFavorite.GetVideoIdByUserId(utils.StringToUint(userGetFavorite.UserId))
 	if err != nil{
-		data := *utils.FormUserGetFavoriteResponse(utils.IntToInt32(Code.UserGetFavoriteListDatatbaseError),Code.GetMsg(Code.UserGetFavoriteListDatatbaseError), &[]video.Video{})
+		data := *utils.FormUserGetFavoriteResponse(Code.UserGetFavoriteListDatatbaseError,Code.GetMsg(Code.UserGetFavoriteListDatatbaseError), []video.Video{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	//根据视频id获取视频数据
-	//videoList := []video.Video{}
-	videoList := make([]video.Video, len(result))
-
-	var count sync.WaitGroup
-	count.Add(len(result))
-
+	videoList := []video.Video{}
 	for i := 0 ; i < len(result); i++{
-
-		go func(index int) {
-			defer func() {
-				count.Done()
-			}()
-			err := Video.GetVideoByVideoId(result[index].VideoId,&videoList[index])
-			if err != nil{
-				return
-			}
-			err =  user.GetUserById(&videoList[index].Author, videoList[index].UserId)
-			if err != nil{
-				return
-			}
-		}(i)
-
+		var videoInfo video.Video
+		err := Video.GetVideoByVideoId(result[i].VideoId,&videoInfo)
+		if err != nil{
+			data := *utils.FormUserGetFavoriteResponse(Code.UserGetFavoriteListDatatbaseError,Code.GetMsg(Code.UserGetFavoriteListDatatbaseError), []video.Video{})
+			c.JSON(http.StatusOK, data)
+			return
+		}
+		exist :=  user.GetUserById(&videoInfo.Author, videoInfo.UserId)
+		if exist != true{
+			data := *utils.FormUserGetFavoriteResponse(Code.UserGetFavoriteListDatatbaseError,Code.GetMsg(Code.UserGetFavoriteListDatatbaseError), []video.Video{})
+			c.JSON(http.StatusOK, data)
+			return
+		}
+		videoList = append(videoList, videoInfo)
 	}
 
-	count.Wait()
-	data := *utils.FormUserGetFavoriteResponse(Code.Success,Code.GetMsg(Code.Success), &videoList)
+	data := *utils.FormUserGetFavoriteResponse(Code.Success,Code.GetMsg(Code.Success), videoList)
 	c.JSON(http.StatusOK, data)
 	return
 

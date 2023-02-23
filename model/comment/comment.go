@@ -32,14 +32,12 @@ func InsertComment(videoId uint, userId uint, content string)(*Comment,error){
 	return &c, result.Error
 }
 
-
-
 func DeleteCommentById(commentId uint)error{
 	result := config.DB.Model(&Comment{}).Where("id = ?", commentId).Update("status", false)
 	return result.Error
 }
 func GetCommentByVideoId(videoId uint)(*[]comment.Comment, error){
 	var response []comment.Comment
-	result := config.DB.Model(&Comment{}).Where("video_id = ? and status = ?", videoId,1).Order("created_at desc").Scan(&response)
+	result := config.DB.Model(&Comment{}).Where("video_id = ? and status = ?", videoId,1).Find(&response)
 	return &response, result.Error
 }

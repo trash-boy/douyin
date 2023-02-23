@@ -9,6 +9,7 @@ import (
 	"TinyTolk/utils/Code"
 	"TinyTolk/utils/JWT"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -20,51 +21,50 @@ func RelationActionHandler(c *gin.Context){
 	//3.对应用户关注数和被关注数对应增减
 	var request social.RelationActionRequest
 	if err := c.ShouldBind(&request);err != nil{
-		data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.RelationActionParamsError),Code.GetMsg(Code.RelationActionParamsError))
+		data := * utils.FormRelationActionResponse(Code.RelationActionParamsError,Code.GetMsg(Code.RelationActionParamsError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if valid := JWT.VerifyToken(c, request.Token);valid != true {
-		data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.TokenInvalid),Code.GetMsg(Code.TokenInvalid))
+		data := * utils.FormRelationActionResponse(Code.TokenInvalid,Code.GetMsg(Code.TokenInvalid))
 		c.JSON(http.StatusOK, data)
 		return
 	}
-
 	followerId ,_ := c.Get("id")
-	err := userfollow.InsertNotExist(followerId.(uint),utils.Int64ToUInt(utils.StringToInt64(request.ToUserId)) )
+	err := userfollow.InsertNotExist(utils.StringToUint(request.ToUserId),followerId.(uint) )
 	if err != nil{
-		data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.RelationActionDatabaseError),Code.GetMsg(Code.RelationActionDatabaseError))
+		data := * utils.FormRelationActionResponse(Code.RelationActionDatabaseError,Code.GetMsg(Code.RelationActionDatabaseError))
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if  request.ActionType == "1"{
-		err := userfollow.UpdateFollow(followerId.(uint), utils.Int64ToUInt(utils.StringToInt64(request.ToUserId)),true)
+		err := userfollow.UpdateFollow(utils.StringToUint(request.ToUserId),followerId.(uint), true)
 		if err != nil{
-			data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.RelationActionDatabaseError),Code.GetMsg(Code.RelationActionDatabaseError))
+			data := * utils.FormRelationActionResponse(Code.RelationActionDatabaseError,Code.GetMsg(Code.RelationActionDatabaseError))
 			c.JSON(http.StatusOK, data)
 			return
 		}
 		//用户详情表关注数和被关注+1
 		go func() {
-			_ = user.AddFollowCount(followerId.(uint))
-			_ = user.AddFollowerCount(utils.Int64ToUInt(utils.StringToInt64(request.ToUserId)))
+			user.AddFollowCount(followerId.(uint))
+			user.AddFollowerCount(utils.StringToUint(request.ToUserId))
 		}()
 	}else{
-		err := userfollow.UpdateFollow(utils.Int64ToUInt(utils.StringToInt64(request.ToUserId)),followerId.(uint), false)
+		err := userfollow.UpdateFollow(utils.StringToUint(request.ToUserId),followerId.(uint), false)
 		if err != nil{
-			data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.RelationActionDatabaseError),Code.GetMsg(Code.RelationActionDatabaseError))
+			data := * utils.FormRelationActionResponse(Code.RelationActionDatabaseError,Code.GetMsg(Code.RelationActionDatabaseError))
 			c.JSON(http.StatusOK, data)
 			return
 		}
 		//用户详情表关注数和被关注减1
 		go func() {
-			_ = user.SubFollowCount(followerId.(uint))
-			_ = user.SubFollowerCount(utils.StringToUint(request.ToUserId))
+			user.SubFollowCount(followerId.(uint))
+			user.SubFollowerCount(utils.StringToUint(request.ToUserId))
 		}()
 	}
-	data := * utils.FormRelationActionResponse(utils.IntToInt32(Code.Success),Code.GetMsg(Code.Success))
+	data := * utils.FormRelationActionResponse(Code.Success,Code.GetMsg(Code.Success))
 	c.JSON(http.StatusOK, data)
 	return
 
@@ -72,15 +72,14 @@ func RelationActionHandler(c *gin.Context){
 
 func RelationFollowListHandler(c *gin.Context){
 	var request social.RelationFollowListRequest
-
 	if err := c.ShouldBind(&request); err != nil{
-		data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.RelationFollowListParamsError), Code.GetMsg(Code.RelationFollowListParamsError), &[]user2.User{})
+		data := *utils.FormRelationFollowListResponse(Code.RelationFollowListParamsError, Code.GetMsg(Code.RelationFollowListParamsError), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if valid := JWT.VerifyToken(c, request.Token); valid != true{
-		data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.TokenInvalid), Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
+		data := *utils.FormRelationFollowListResponse(Code.TokenInvalid, Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -88,75 +87,70 @@ func RelationFollowListHandler(c *gin.Context){
 	//检验token与当前用户是否一致
 	id,_ := c.Get("id")
 	if id.(uint) != utils.StringToUint(request.UserId){
-		data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.TokenInvalid), Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
+		data := *utils.FormRelationFollowListResponse(Code.TokenInvalid, Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	followIdList, err := userfollow.GetFollowIdListByUserId(id.(uint))
+	followIdList, err := userfollow.GetFollowIdListByUserId(utils.StringToUint(request.UserId))
 	if err != nil{
-		data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.RelationFollowListDatabaseError), Code.GetMsg(Code.RelationFollowListDatabaseError), &[]user2.User{})
+		data := *utils.FormRelationFollowListResponse(Code.RelationFollowListDatabaseError, Code.GetMsg(Code.RelationFollowListDatabaseError), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	var userInfo = make([]user2.User, len(followIdList))
-
 	var count sync.WaitGroup
 	count.Add(len(followIdList))
 
 	for idx,userId := range followIdList{
 		go func(index int, userId uint) {
+			_ = user.GetUserById(&userInfo[index],userId)
+
+			userInfo[index].IsFollow,_=  userfollow.UserIsFollow(id.(uint),userId)
+
+			//1.搜索详细的信息
+			var userDetail user.UserInfo
+			_ = user.GetUserInfoByUserId(&userDetail,  userId)
+
+			//将userInfo 数据全部映射到tempUser中
+			_ = utils.UserInfoToUser(&userInfo[index], &userDetail)
 			defer func() {
 				count.Done()
 			}()
-
-			err = user.GetUserById(&userInfo[index],userId)
-			if err != nil{
-				return
-			}
-
-			userInfo[index].IsFollow,err=  userfollow.UserIsFollow(id.(uint),userId)
-			if err != nil{
-				return
-			}
-
-
-
 		}(idx, userId)
 	}
 	count.Wait()
 
-	data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.Success), Code.GetMsg(Code.Success), &userInfo)
+	data := *utils.FormRelationFollowListResponse(Code.Success, Code.GetMsg(Code.Success), &userInfo)
 	c.JSON(http.StatusOK, data)
 	return
 }
 
 
 func RelationFollowerListHandler(c *gin.Context){
-
 	var request social.RelationFollowerListRequest
 	if err := c.ShouldBind(&request); err != nil{
-		data := *utils.FormRelationFollowerListResponse(utils.IntToInt32(Code.RelationFollowerListParamsError), Code.GetMsg(Code.RelationFollowerListParamsError), &[]user2.User{})
+		data := *utils.FormRelationFollowerListResponse(Code.RelationFollowerListParamsError, Code.GetMsg(Code.RelationFollowerListParamsError), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if valid := JWT.VerifyToken(c, request.Token); valid != true{
-		data := *utils.FormRelationFollowListResponse(utils.IntToInt32(Code.TokenInvalid), Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
+		data := *utils.FormRelationFollowListResponse(Code.TokenInvalid, Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	//检验token与当前用户是否一致
 	id,_ := c.Get("id")
-	if id.(uint) != utils.Int64ToUInt(utils.StringToInt64(request.UserId)){
-		data := *utils.FormRelationFollowerListResponse(utils.IntToInt32(Code.TokenInvalid), Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
+	if id.(uint) != utils.StringToUint(request.UserId){
+		data := *utils.FormRelationFollowerListResponse(Code.TokenInvalid, Code.GetMsg(Code.TokenInvalid), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	followerIdList, err := userfollow.GetFollowerIdListByUserId(id.(uint))
+	followerIdList, err := userfollow.GetFollowerIdListByUserId(utils.StringToUint(request.UserId))
 	if err != nil{
 		data := *utils.FormRelationFollowerListResponse(Code.RelationFollowerListDatabaseError, Code.GetMsg(Code.RelationFollowerListDatabaseError), &[]user2.User{})
 		c.JSON(http.StatusOK, data)
@@ -170,27 +164,27 @@ func RelationFollowerListHandler(c *gin.Context){
 	for idx,userId := range followerIdList{
 
 		go func(index int, userId uint) {
+			exist := user.GetUserById(&userInfo[index],userId)
+			log.Println(exist)
 
+			userInfo[index].IsFollow,err=  userfollow.UserIsFollow(userId,id.(uint))
+			log.Println(err)
+
+			//1.搜索详细的信息
+			var userDetail user.UserInfo
+			exist = user.GetUserInfoByUserId(&userDetail,  userId)
+			log.Println(exist)
+
+			//将userInfo 数据全部映射到tempUser中
+			_ = utils.UserInfoToUser(&userInfo[index], &userDetail)
 			defer func() {
 				count.Done()
 			}()
-
-			err := user.GetUserById(&userInfo[index],userId)
-			if err != nil{
-				return
-			}
-
-			userInfo[index].IsFollow,err=  userfollow.UserIsFollow(userId,id.(uint))
-			if err != nil{
-				return
-			}
-
-
 		}(idx, userId)
 	}
 	count.Wait()
 
-	data := *utils.FormRelationFollowerListResponse(utils.IntToInt32(Code.Success), Code.GetMsg(Code.Success), &userInfo)
+	data := *utils.FormRelationFollowerListResponse(Code.Success, Code.GetMsg(Code.Success), &userInfo)
 	c.JSON(http.StatusOK, data)
 	return
 }

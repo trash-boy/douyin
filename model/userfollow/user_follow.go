@@ -2,16 +2,16 @@ package userfollow
 
 import (
 	"TinyTolk/config"
-	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type UserFollow struct {
 
-	gorm.Model
 	UserId uint `gorm:"primaryKey;autoIncrement:false"`
 	FollowId uint `gorm:"primaryKey;autoIncrement:false"`
 	Status bool `gorm:"DEFAULT:true"`
-
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func CreateUserFollowTable()error{
@@ -53,8 +53,9 @@ func InsertFollow(userId uint, followerId uint)error{
 	userFollow.UserId = userId
 	userFollow.FollowId = followerId
 	userFollow.Status = true
+	userFollow.CreatedAt = time.Now()
 
-	result := config.DB.Create(&userFollow)
+	result := config.DB.Create(userFollow)
 	return result.Error
 }
 

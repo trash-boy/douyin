@@ -15,11 +15,13 @@ type VideoListResponse struct {
 	StatusMsg string `json:"status_msg"`
 	VideoList []Video `json:"video_list"`
 
+
 }
 
 type Video struct {
 	Id uint `json:"id" gorm:"id"`
-	CreatedAt time.Time `json:"-"`
+
+	CreatedAt time.Time`json:"-" gorm:"created_at"`
 	Author user2.User `json:"author"`
 	UserId uint `json:"-" gorm:"user_id"`
 	PlayUrl string `json:"play_url" gorm:"play_url"`
