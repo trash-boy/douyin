@@ -2,11 +2,11 @@ package utils
 
 import "TinyTolk/response/comment"
 
-func FormCommentActionResponse(statusCode int32, statusMsg string, c comment.Comment)*comment.CommentActionResponse{
+func FormCommentActionResponse(statusCode int32, statusMsg string, c *comment.Comment)*comment.CommentActionResponse{
 	var response comment.CommentActionResponse
 	response.StatusCode = statusCode
 	response.StatusMsg = statusMsg
-	response.Content = c
+	response.Content = *c
 	return &response
 
 }

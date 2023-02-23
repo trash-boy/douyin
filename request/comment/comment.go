@@ -4,9 +4,9 @@ import "github.com/go-playground/validator/v10"
 
 type CommentActionRequest struct {
 	Token string `form:"token"`
-	VideoId string `form:"video_id" gorm:"video_id" validate:"required,ValidateCommentVideoId"`
+	VideoId string `form:"video_id"  validate:"required,ValidateCommentVideoId"`
 	ActionType string `form:"action_type" validate:"required,ValidateCommentActionType"`
-	CommentText string `form:"comment_text" gorm:"content" validate:"required,ValidateCommentText"`
+	CommentText string `form:"comment_text"  validate:"required,ValidateCommentText"`
 	CommentId string `form:"comment_id"`
 }
 

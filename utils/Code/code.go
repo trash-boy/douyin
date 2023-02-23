@@ -41,6 +41,9 @@ const (
 	RelationFollowListDatabaseError = 600004
 	RelationFollowerListParamsError = 600005
 	RelationFollowerListDatabaseError = 600006
+
+	RelationDatabaseError  = 600007
+
 )
 
 var Msg = map[int]string{
@@ -82,6 +85,7 @@ var Msg = map[int]string{
 	RelationFollowListDatabaseError:"用户关注列表数据库错误",
 	RelationFollowerListParamsError:"用户粉丝列表参数错误",
 	RelationFollowerListDatabaseError:"用户粉丝列表数据库错误",
+	RelationDatabaseError:"用户关注数据库错误",
 
 
 }

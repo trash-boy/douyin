@@ -11,11 +11,11 @@ type CommentActionResponse struct {
 }
 
 type Comment struct {
-	Id int64 `json:"id" gorm:"id"`
+	Id int64 `json:"id" `
 	User user.User `json:"user"`
-	UserId uint `json:"-" gorm:"user_id"`
-	Content string  `json:"content" gorm:"content"`
-	CreatedAt string`json:"create_date" gorm:"created_at"`
+	UserId uint `json:"-" `
+	Content string  `json:"content"`
+	CreatedAt string `json:"create_date"`
 }
 
 type CommentGetListResponse struct {

@@ -12,11 +12,11 @@ func FormUserVideoFavoriteResponse(statusCode int32, statusMsg string)*uservideo
 	return &uservideo
 }
 
-func FormUserGetFavoriteResponse(statusCode int32, statusMsg string,  videoList []video.Video)*uservideo.UserGetFavoriteListResponse{
+func FormUserGetFavoriteResponse(statusCode int32, statusMsg string,  videoList *[]video.Video)*uservideo.UserGetFavoriteListResponse{
 	var response uservideo.UserGetFavoriteListResponse
 	response.StatusCode = statusCode
 	response.StatusMsg = statusMsg
-	response.VideoList = videoList
+	response.VideoList = *videoList
 	return &response
 }
 

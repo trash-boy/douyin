@@ -20,19 +20,19 @@ func FormVideoActionResponse(statusCode int32, statusMsg string)*video.VideoActi
 	return &video
 }
 
-func FormVideoListResponse(statusCode int32, statusMsg string, videoList []video.Video)*video.VideoListResponse{
+func FormVideoListResponse(statusCode int32, statusMsg string, videoList *[]video.Video)*video.VideoListResponse{
 	var video video.VideoListResponse
 	video.StatusCode = statusCode
 	video.StatusMsg = statusMsg
-	video.VideoList = videoList
+	video.VideoList = *videoList
 	return &video
 }
 
-func FormVideoFeedResponse(statusCode int32, statusMsg string, videoList []video.Video,nextTime int64)*video.VideoFeedResponse{
+func FormVideoFeedResponse(statusCode int32, statusMsg string, videoList *[]video.Video,nextTime int64)*video.VideoFeedResponse{
 	var video video.VideoFeedResponse
 	video.StatusCode = statusCode
 	video.StatusMsg = statusMsg
-	video.VideoList = videoList
+	video.VideoList = *videoList
 	video.NextTime = nextTime
 	return &video
 }
