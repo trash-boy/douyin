@@ -47,8 +47,6 @@ func UserRegisterHandler(c *gin.Context){
 	return
 
 }
-
-
 func UserLoginHandler(c *gin.Context){
 	var request user.UserLoginRequest
 	if err := c.Bind(&request); err != nil{
@@ -82,7 +80,6 @@ func UserLoginHandler(c *gin.Context){
 	c.JSON(http.StatusOK,data)
 	return
 }
-
 func GetUserHandler(c *gin.Context){
 
 	var request  user.UserReuqest
