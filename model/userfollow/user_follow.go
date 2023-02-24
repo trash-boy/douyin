@@ -6,49 +6,46 @@ import (
 )
 
 type UserFollow struct {
-
 	gorm.Model
-	UserId uint `gorm:"primaryKey;autoIncrement:false"`
-	FollowId uint `gorm:"primaryKey;autoIncrement:false"`
-	Status bool `gorm:"DEFAULT:true"`
-
+	UserId   uint `gorm:""`
+	FollowId uint `gorm:""`
+	Status   bool `gorm:"DEFAULT:true"`
 }
 
-func CreateUserFollowTable()error{
+func CreateUserFollowTable() error {
 	db := config.DB.AutoMigrate(&UserFollow{})
 	return db.Error
 }
 
-
-func GetFollowIdListByUserId(userId uint)([]uint, error){
+func GetFollowIdListByUserId(userId uint) ([]uint, error) {
 	var ans []uint
 	var userFollow []UserFollow
-	result := config.DB.Model(UserFollow{}).Where("user_id = ? and status = ?",userId, true).Select("follow_id").Find(&userFollow)
-	for i := 0; i < len(userFollow); i++{
+	result := config.DB.Model(UserFollow{}).Where("user_id = ? and status = ?", userId, true).Select("follow_id").Find(&userFollow)
+	for i := 0; i < len(userFollow); i++ {
 		ans = append(ans, userFollow[i].FollowId)
 	}
 	return ans, result.Error
 }
 
-func GetFollowerIdListByUserId(userId uint)([]uint, error){
+func GetFollowerIdListByUserId(userId uint) ([]uint, error) {
 	var ans []uint
 	var userFollow []UserFollow
-	result := config.DB.Model(UserFollow{}).Where("follow_id = ? and status = ?",userId, true).Select("user_id").Find(&userFollow)
-	for i := 0; i < len(userFollow); i++{
+	result := config.DB.Model(UserFollow{}).Where("follow_id = ? and status = ?", userId, true).Select("user_id").Find(&userFollow)
+	for i := 0; i < len(userFollow); i++ {
 		ans = append(ans, userFollow[i].UserId)
 	}
 	return ans, result.Error
 }
-func InsertNotExist(userId uint, followerId uint)error{
-	exist,_ := RecordIsExist(userId, followerId)
+func InsertNotExist(userId uint, followerId uint) error {
+	exist, _ := RecordIsExist(userId, followerId)
 
-	if !exist{
+	if !exist {
 		return InsertFollow(userId, followerId)
 	}
 	return nil
 }
 
-func InsertFollow(userId uint, followerId uint)error{
+func InsertFollow(userId uint, followerId uint) error {
 	var userFollow UserFollow
 	userFollow.UserId = userId
 	userFollow.FollowId = followerId
@@ -58,15 +55,13 @@ func InsertFollow(userId uint, followerId uint)error{
 	return result.Error
 }
 
-func UpdateFollow(userId uint, followerId uint, status bool)error{
-
+func UpdateFollow(userId uint, followerId uint, status bool) error {
 
 	result := config.DB.Model(&UserFollow{}).Where("user_id = ? and follow_id = ?", userId, followerId).Update("status", status)
 	return result.Error
 }
 
-
-func DeleteFollow(userId uint, followerId uint)error{
+func DeleteFollow(userId uint, followerId uint) error {
 	var userFollow UserFollow
 	userFollow.UserId = userId
 	userFollow.FollowId = followerId
@@ -74,23 +69,21 @@ func DeleteFollow(userId uint, followerId uint)error{
 	return result.Error
 }
 
-func RecordIsExist(userId uint, followerId uint)(bool,error){
+func RecordIsExist(userId uint, followerId uint) (bool, error) {
 	var userFollow UserFollow
 
-
 	result := config.DB.Model(&UserFollow{}).Where("user_id = ? and follow_id = ?", userId, followerId).First(&userFollow)
-	return result.RowsAffected != 0,result.Error
+	return result.RowsAffected != 0, result.Error
 }
 
-func UserIsFollow(userId, followId uint)(bool,error){
+func UserIsFollow(userId, followId uint) (bool, error) {
 	var userFollow UserFollow
 	userFollow.UserId = userId
 	userFollow.FollowId = followId
 
 	result := config.DB.Find(&userFollow)
-	if result.RowsAffected != 0  && userFollow.Status == true{
-		return true,nil
+	if result.RowsAffected != 0 && userFollow.Status == true {
+		return true, nil
 	}
 	return false, nil
 }
-
