@@ -14,7 +14,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mozillazg/go-httpheader v0.3.1 // indirect
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.41 // indirect
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/u2takey/ffmpeg-go v0.4.1
 	golang.org/x/image v0.4.0 // indirect
 )

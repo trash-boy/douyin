@@ -1,7 +1,7 @@
 #源镜像
 FROM golang:latest
 #作者
-MAINTAINER Razil "1486015534@qq.com"
+MAINTAINER liuyang "1486015534@qq.com"
 #设置工作目录
 WORKDIR $GOPATH/src/github.com/douyin
 #将服务器的go工程代码加入到docker容器中
