@@ -7,28 +7,28 @@ import (
 	user2 "TinyTolk/controller/user"
 	uservideo2 "TinyTolk/controller/uservideo"
 	"TinyTolk/controller/video"
+	"TinyTolk/model/DataBaseInit"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
-func main()  {
+func main() {
 	//配置MySQL连接参数
-	if config.DB == nil{
+	if config.DB == nil {
 		log.Panic("用户数据库连接错误")
 	}
 
-
 	r := gin.Default()
-
+	DataBaseInit.Init()
 
 	v1 := r.Group("douyin")
 	{
 		v1.POST("/user/register/", user2.UserRegisterHandler)
 		v1.POST("/user/login/", user2.UserLoginHandler)
-		v1.GET("/user/",user2.GetUserHandler)
-		v1.POST("/publish/action/",video.VideoActionHandler)
-		v1.GET("/publish/list/",video.VideoListHandler)
-		v1.GET("/feed/",video.VideoFeedHandler)
+		v1.GET("/user/", user2.GetUserHandler)
+		v1.POST("/publish/action/", video.VideoActionHandler)
+		v1.GET("/publish/list/", video.VideoListHandler)
+		v1.GET("/feed/", video.VideoFeedHandler)
 
 		v1.POST("/favorite/action/", uservideo2.UserVideoFavoriteHandler)
 		v1.GET("/favorite/list/", uservideo2.UserGetFavoriteListHandler)
@@ -41,8 +41,5 @@ func main()  {
 		v1.GET("/relation/follower/list/", soical.RelationFollowerListHandler)
 	}
 
-
 	r.Run(":8080")
 }
-
-
