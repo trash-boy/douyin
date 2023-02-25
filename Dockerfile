@@ -7,6 +7,7 @@ WORKDIR $GOPATH/src/github.com/douyin
 #将服务器的go工程代码加入到docker容器中
 ADD . $GOPATH/src/github.com/douyin
 #go构建可执行文件
+RUN go mod tidy
 RUN go build .
 #暴露端口
 EXPOSE 8080
